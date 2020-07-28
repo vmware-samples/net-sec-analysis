@@ -1,0 +1,454 @@
+%YAML 1.1
+---
+cpu-affinity:
+  - management-cpu-set:
+  - receive-cpu-set:
+  - decode-cpu-set:
+      cpu: [ "2" ]
+      mode: "balanced"
+  - stream-cpu-set:
+      cpu: [ "0-4" ]
+  - detect-cpu-set:
+      cpu: [ 6, 8, 10 ]
+      threads: 3
+      prio:
+         low: [ "0-4" ]
+         medium: [ "5-23" ]
+         default: "medium"
+  - verdict-cpu-set:
+      cpu: [ 0 ]
+      prio:
+         default: "high"
+  - reject-cpu-set:
+      cpu: [ 0 ]
+      prio:
+         default: "low"
+  - output-cpu-set:
+      cpu: [ "0" ]
+      prio:
+         default: "medium"
+vars:
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    EXTERNAL_NET: "!$HOME_NET"
+    HTTP_SERVERS: "$HOME_NET"
+    SMTP_SERVERS: "$HOME_NET"
+    SQL_SERVERS: "$HOME_NET"
+    DNS_SERVERS: "$HOME_NET"
+    TELNET_SERVERS: "$HOME_NET"
+    AIM_SERVERS: "$EXTERNAL_NET"
+    DNP3_SERVER: "$HOME_NET"
+    DNP3_CLIENT: "$HOME_NET"
+    MODBUS_CLIENT: "$HOME_NET"
+    MODBUS_SERVER: "$HOME_NET"
+    ENIP_CLIENT: "$HOME_NET"
+    ENIP_SERVER: "$HOME_NET"
+  port-groups:
+    FILE_DATA_PORTS: "[80,110,143]"
+    HTTP_PORTS: "80"
+    SHELLCODE_PORTS: "!80"
+    ORACLE_PORTS: 1521
+    SSH_PORTS: 22
+    DNP3_PORTS: 20000
+    MODBUS_PORTS: 502
+
+default-rule-path: /usr/local/var/lib/suricata/rules/
+rule-files:
+  suricata.rules
+default-log-dir: /var/log/suricata
+stats:
+  enabled: no
+  interval: 60
+outputs:
+  - fast:
+      enabled: no
+      filename: fast.log
+      append: yes
+  - alert-json-log:
+      enabled: no
+      filename: alert-json.log
+  - eve-log:
+      enabled: yes
+      filename: alert-json.log
+      community-id: true
+      community-id-seed: 0
+      types:
+        - alert:
+            tagged-packets: no 
+            xff:
+              enabled: yes
+              mode: extra-data
+              deployment: reverse
+              header: X-Forwarded-For
+        - http:
+            enabled: no
+        - dns:
+            enabled: no
+        - tls:
+            enabled: no
+        - files:
+            enabled: no
+            force-hash: [md5, sha1, sha256]
+        - drop:
+            enabled: no
+        - smtp:
+            enabled: no
+        - stats:
+            enabled: no
+  - unified2-alert:
+      enabled: no
+      filename: unified2.alert
+      xff:
+        enabled: no
+        mode: extra-data
+        deployment: reverse
+        header: X-Forwarded-For
+  - http-log:
+      enabled: no
+      filename: http.log
+      append: yes
+  - tls-log:
+      append: yes
+  - tls-store:
+      enabled: no 
+  - dns-log:
+      enabled: no
+      filename: dns.log
+      append: yes
+  - pcap-log:
+      enabled: no
+      filename: log.pcap
+      limit: 1000mb
+      max-files: 2000
+  - alert-debug:
+      enabled: yes
+      filename: alert-debug.log
+      append: yes
+  - alert-prelude:
+      enabled: no
+      profile: suricata
+      log-packet-content: no
+      log-packet-header: yes
+  - stats:
+      enabled: no
+      filename: stats.log
+  - syslog:
+      enabled: no
+      facility: local5
+  - drop:
+      enabled: yes
+      filename: drop.log
+      append: yes
+  - file-store:
+      force-hash: [md5, sha1, sha256]
+  - file-log:
+      enabled: no
+      filename: files-json.log
+      append: yes
+      force-hash: [md5, sha1, sha256]
+  - tcp-data:
+      enabled: no
+      type: file
+      filename: tcp-data.log
+  - http-body-data:
+      enabled: no
+      type: file
+      filename: http-data.log
+  - lua:
+      enabled: yes
+      scripts:
+logging:
+  default-log-level: notice
+  default-output-filter:
+  outputs:
+  - console:
+      enabled: yes
+  - file:
+      enabled: no
+      level: info
+  - syslog:
+      enabled: no
+      facility: local5
+      format: "[%i] <%d> -- "
+af-packet:
+  - interface: eth0
+    cluster-id: 99
+    cluster-type: cluster_flow
+    defrag: yes
+  - interface: default
+pcap:
+  - interface: eth0
+  - interface: default
+pcap-file:
+  checksum-checks: auto
+app-layer:
+  protocols:
+    tls:
+      enabled: yes
+      detection-ports:
+        dp: 443
+    dcerpc:
+      enabled: yes
+    ftp:
+      enabled: yes
+    ssh:
+      enabled: yes
+    smtp:
+      enabled: yes
+      mime:
+        decode-mime: yes
+        decode-base64: yes
+        decode-quoted-printable: yes
+        header-value-depth: 2000
+        extract-urls: yes
+        body-md5: yes
+      inspected-tracker:
+        content-limit: 100000
+        content-inspect-min-size: 32768
+        content-inspect-window: 4096
+    imap:
+      enabled: yes
+    msn:
+      enabled: yes
+    smb:
+      enabled: yes
+      detection-ports:
+        dp: 139, 445
+    smb2:
+      enabled: yes
+    dns:
+      tcp:
+        enabled: yes
+        detection-ports:
+          dp: 53
+      udp:
+        enabled: yes
+        detection-ports:
+          dp: 53
+    http:
+      enabled: yes
+      libhtp:
+         default-config:
+           personality: IDS
+           request-body-limit: 100kb
+           response-body-limit: 100kb
+           request-body-minimal-inspect-size: 32kb
+           request-body-inspect-window: 4kb
+           response-body-minimal-inspect-size: 40kb
+           response-body-inspect-window: 16kb
+           response-body-decompress-layer-limit: 2
+           http-body-inline: auto
+           double-decode-path: no
+           double-decode-query: no
+         server-config:
+    modbus:
+      enabled: yes
+      detection-ports:
+        dp: 502
+      stream-depth: 0
+    dnp3:
+      enabled: yes
+      detection-ports:
+        dp: 20000
+    enip:
+      enabled: yes
+      detection-ports:
+        dp: 44818
+        sp: 44818
+asn1-max-frames: 256
+coredump:
+  max-dump: unlimited
+host-mode: auto
+runmode: workers
+unix-command:
+  enabled: no
+magic-file: /usr/share/file/magic
+legacy:
+  uricontent: enabled
+engine-analysis:
+  rules-fast-pattern: yes
+  rules: yes
+pcre:
+  match-limit: 3500
+  match-limit-recursion: 1500
+host-os-policy:
+  windows: [0.0.0.0/0]
+  bsd: []
+  bsd-right: []
+  old-linux: []
+  linux: []
+  old-solaris: []
+  solaris: []
+  hpux10: []
+  hpux11: []
+  irix: []
+  macos: []
+  vista: []
+  windows2k3: []
+defrag:
+  memcap: 32mb
+  hash-size: 65536
+  prealloc: yes
+  timeout: 60
+flow:
+  memcap: 128mb
+  hash-size: 65536
+  prealloc: 10000
+  emergency-recovery: 30
+vlan:
+  use-for-tracking: true
+flow-timeouts:
+  default:
+    new: 30
+    established: 300
+    closed: 0
+    bypassed: 100
+    emergency-new: 10
+    emergency-established: 100
+    emergency-closed: 0
+    emergency-bypassed: 50
+  tcp:
+    new: 60
+    established: 600
+    closed: 60
+    bypassed: 100
+    emergency-new: 5
+    emergency-established: 100
+    emergency-closed: 10
+    emergency-bypassed: 50
+  udp:
+    new: 30
+    established: 300
+    bypassed: 100
+    emergency-new: 10
+    emergency-established: 100
+    emergency-bypassed: 50
+  icmp:
+    new: 30
+    established: 300
+    bypassed: 100
+    emergency-new: 10
+    emergency-established: 100
+    emergency-bypassed: 50
+stream:
+  memcap: 64mb
+  reassembly:
+    memcap: 256mb
+    toserver-chunk-size: 2560
+    toclient-chunk-size: 2560
+    randomize-chunk-size: yes
+host:
+  hash-size: 4096
+  prealloc: 1000
+  memcap: 32mb
+detect:
+  profile: medium
+  custom-values:
+    toclient-groups: 3
+    toserver-groups: 25
+  sgh-mpm-context: auto
+  inspection-recursion-limit: 3000
+  prefilter:
+    default: mpm
+  grouping:
+  profiling:
+    grouping:
+      dump-to-disk: false
+      include-mpm-stats: false
+mpm-algo: auto
+spm-algo: auto
+threading:
+  set-cpu-affinity: no
+  cpu-affinity:
+    - management-cpu-set:
+    - receive-cpu-set:
+    - worker-cpu-set:
+        cpu: [ "all" ]
+        mode: "exclusive"
+        prio:
+          low: [ 0 ]
+          medium: [ "1-2" ]
+          high: [ 3 ]
+          default: "medium"
+  detect-thread-ratio: 1.0
+luajit:
+  states: 128
+profiling:
+  rules:
+    enabled: yes
+    filename: rule_perf.log
+    append: yes
+    sort: avgticks
+    limit: 100
+    json: no
+  keywords:
+    enabled: yes
+    filename: keyword_perf.log
+    append: yes
+  rulegroups:
+    enabled: yes
+    filename: rule_group_perf.log
+    append: yes
+  packets:
+    enabled: yes
+    filename: packet_stats.log
+    append: yes
+    csv:
+      enabled: no
+      filename: packet_stats.csv
+  locks:
+    enabled: no
+    filename: lock_stats.log
+    append: yes
+  pcap-log:
+    enabled: no
+    filename: pcaplog_stats.log
+    append: yes
+nfq:
+nflog:
+  - group: 2
+    buffer-size: 18432
+  - group: default
+    qthreshold: 1
+    qtimeout: 100
+    max-size: 20000
+capture:
+netmap:
+ - interface: eth2
+ - interface: default
+pfring:
+  - interface: eth1
+    threads: 16
+    cluster-id: 99
+    cluster-type: cluster_round_robin
+  - interface: default
+ipfw:
+napatech:
+    hba: -1
+    use-all-streams: yes
+    streams: [1, 2, 3]
+mpipe:
+  load-balance: dynamic
+  iqueue-packets: 2048
+  inputs:
+  - interface: xgbe2
+  - interface: xgbe3
+  - interface: xgbe4
+  stack:
+    size128: 0
+    size256: 9
+    size512: 0
+    size1024: 0
+    size1664: 7
+    size4096: 0
+    size10386: 0
+    size16384: 0
+cuda:
+  mpm:
+    data-buffer-size-min-limit: 0
+    data-buffer-size-max-limit: 1500
+    cudabuffer-buffer-size: 500mb
+    gpu-transfer-size: 50mb
+    batching-timeout: 2000
+    device-id: 0
+    cuda-streams: 2
