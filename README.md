@@ -44,9 +44,9 @@ Insert architecture diag image???
 
 ## QuickStart Guide
  - Login as netsec user
- - Git Clone
  - Setup Network and resovler/DNS.
- - Run install script.
+ - Git Clone: git clone https://github.com/vmware-samples/net-sec-analysis
+ - Run the install script: cd net-sec-analysis && bash src/install.sh
 
 ## Modify configuration
 - MONITOR_INTERFACE, Moloch credentails, PF_RING version etc can be updated by modifying src/scripts/install.sh script.
