@@ -1,0 +1,5 @@
+docker
+requests
+hvac
+splunk-sdk
+paramiko
