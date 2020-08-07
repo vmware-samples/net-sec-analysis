@@ -1,0 +1,54 @@
+version: '2'
+services:
+  fpc:
+    image: moloch:latest
+    container_name: moloch_cap
+    restart: always
+    volumes:
+      - /docker/moloch_cap/raw:/data/moloch/raw
+      - /docker/moloch_cap/var:/data/moloch/logs
+    ports:
+      - 8005:8005
+    network_mode: "host"
+    stdin_open: true
+    tty: true
+    entrypoint: "/usr/bin/supervisord -c /etc/supervisord.d/supervisord.conf"
+    privileged: true
+
+  suricata:
+    image: suricata:latest
+    container_name: suricata
+    restart: always
+    volumes:
+      - /docker/suricata/var:/var/log/suricata
+    network_mode: "host"
+    stdin_open: true
+    tty: true
+    entrypoint: "/usr/bin/supervisord -c /etc/supervisord.d/supervisord.conf"
+    privileged: true
+
+  zeek:
+    image: zeek:latest
+    container_name: zeek
+    restart: always
+    volumes:
+      - /docker/bro/var:/opt/zeek/spool
+    network_mode: "host"
+    stdin_open: true
+    tty: true
+    entrypoint: "/usr/bin/supervisord -c /etc/supervisord.d/supervisord.conf"
+    privileged: true
+
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.6
+    container_name: es
+    environment:
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+    network_mode: host
