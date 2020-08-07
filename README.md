@@ -8,9 +8,9 @@
   - [Overview](#overview)
   - [Architecture](#architecture)
   - [Prerequisites](#Prerequisites)
-  - [QuickStart Guide](#QuickStart Guide)
+  - [QuickStart Guide](#QuickStart)
   - [Samples](#Samples)
-  - [Getting in touch](#Getting in touch)
+  - [Getting in touch](#ReachUs)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -40,7 +40,7 @@ The install also includes PF_RING installation that helps improve packet capture
  - VM requires a network adaptor for management interface and depending on the requirement add a secondary NIC for ingesting traffic from a SPAN or TAP device.
  - Create a local user called 'netsec' and provide sudo priviliges.
 
-## QuickStart Guide
+## QuickStart
  - Login as netsec user
  - Setup Network and resovler/DNS.
  - Git Clone: git clone https://github.com/vmware-samples/net-sec-analysis/
@@ -74,7 +74,7 @@ systemctl start span_iface
 ## Tests
  - Tests are performed by loading a sample PCAP provided in the install package and can be run using the scripts provided in test dir. 
 
-## Getting in touch
+## ReachUs
 
 Feel free to reach out to the Team:
   - Email us at (mailto: <net-security-analysis@vmware.com>)
